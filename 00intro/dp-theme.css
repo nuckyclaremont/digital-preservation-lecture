@@ -1,0 +1,63 @@
+/* @theme dp */
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap');
+
+section{
+  --teal:#07675b;--teal-d:#04483f;--teal-l:#e6f0ee;--rust:#672407;--rust-h:#b33700;
+  --text:#444444;--grey:#f4f4f4;--rule:#ebebeb;--slate:#5f707f;--white:#ffffff;--red:#c60f13;
+  --sans:'Open Sans',Arial,Helvetica,sans-serif;
+  width:1280px;height:720px;background:var(--white);color:var(--text);
+  font-family:var(--sans);font-size:24px;line-height:1.6;padding:0;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+section header,section footer{display:none!important}
+section::after{display:none}
+
+section .content{
+  position:absolute;top:0;bottom:0;left:0;right:0;padding:56px 64px 48px;
+  display:flex;flex-direction:column;gap:16px;overflow:hidden;
+}
+
+section h1,section h2,section h3,section h4,section h5{color:var(--teal);margin:0;line-height:1.2}
+section h1{font-size:66px;font-weight:700;letter-spacing:-1px}
+section h2{font-size:42px;font-weight:600}
+section h3{font-size:30px;font-weight:600}
+section h4{font-size:24px;font-weight:600}
+section h1 strong,section h2 strong{font-weight:800}
+section p{margin:0 0 12px;font-size:26px;line-height:1.65;color:var(--text)}
+section a{color:var(--rust);font-weight:600;text-decoration:none}
+section strong{font-weight:700;color:var(--teal)}
+section ul,section ol{margin:0;padding-left:28px}
+section ul{list-style:disc}
+section li{font-size:26px;line-height:1.5;margin-bottom:10px;padding-left:6px;color:var(--text)}
+section li::marker{color:var(--teal)}
+
+section .cols{display:grid;grid-template-columns:1fr 1fr;gap:40px;flex:1;min-height:0}
+
+/* title */
+section.title .content{justify-content:center;gap:18px;padding-left:96px;padding-right:96px}
+section.title .content::before{content:'';display:block;width:96px;height:8px;background:var(--teal);margin-bottom:14px}
+section.title h1{font-size:76px}
+section.title .sub{font-size:30px;font-weight:300;color:var(--slate);margin:0;line-height:1.4}
+
+/* section divider */
+section.section{background:var(--teal)}
+section.section .content{justify-content:center;gap:12px;padding-left:96px;padding-right:96px}
+section.section h1,section.section h2,section.section h3,section.section p,section.section li,section.section strong{color:var(--white)}
+section.section h1{font-size:72px}
+
+/* cards */
+section .card{background:var(--grey);border-top:6px solid var(--teal);padding:28px 30px 32px;display:flex;flex-direction:column;gap:6px}
+section .card h3{font-size:32px}
+section .card p,section .card li{font-size:24px;line-height:1.5}
+section .card.rust{border-top-color:var(--rust)}
+
+/* big layout */
+section .content.big{gap:28px;padding-top:72px}
+section .big h2{font-size:64px}
+section .big li{font-size:40px;line-height:1.35;margin-bottom:24px}
+section .big li li{font-size:34px;margin-top:14px;margin-bottom:0}
+section .big ul{padding-left:40px}
+section .big .card{padding:36px 40px 40px;gap:16px}
+section .big .card h3{font-size:40px;margin-bottom:8px}
+section .big .card li{font-size:29px;line-height:1.35;margin-bottom:16px}
+section .big .cols{align-items:start}
