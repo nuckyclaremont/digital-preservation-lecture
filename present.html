@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Play the lecture: Intro to Digital Archives &amp; Preservation</title>
+<style>
+  html, body { height: 100%; margin: 0; background: #000; color: #ddd; font: 14px system-ui, sans-serif; }
+  #wrap { display: flex; flex-direction: column; height: 100%; background: #000; }
+  #bar { display: flex; gap: 8px; align-items: center; padding: 6px 10px; background: #111; border-bottom: 1px solid #333; }
+  #bar button, #bar select { background: #222; color: #eee; border: 1px solid #444; border-radius: 4px; padding: 4px 10px; font: inherit; cursor: pointer; }
+  #bar button:hover, #bar select:hover { background: #333; }
+  #bar .sp { flex: 1; }
+  #bar .hint { color: #888; }
+  #bar a { color: #8ab; text-decoration: none; }
+  #msg { color: #f90; }
+  #frame { flex: 1; width: 100%; border: 0; background: #000; }
+  #wrap:fullscreen #bar { display: none; }
+  #wrap:-webkit-full-screen #bar { display: none; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="bar">
+    <a href="./" title="Back to the lecture index">&larr; Index</a>
+    <button id="prevDeck" title="Previous deck">&#9198;</button>
+    <select id="pick" aria-label="Choose a deck"></select>
+    <button id="nextDeck" title="Next deck">&#9197;</button>
+    <span id="msg"></span>
+    <span class="sp"></span>
+    <span class="hint">&larr; &rarr; move through slides and decks &middot; F = fullscreen</span>
+    <button id="fs">Fullscreen</button>
+  </div>
+  <iframe id="frame" title="Lecture slides" allow="fullscreen"></iframe>
+</div>
+
+<script>
+(function () {
+  // Edit this list to add or reorder decks. Paths are relative to this file.
+  var DECKS = [
+    { title: 'Intro',                   url: '00intro/00-intro.html' },
+    { title: 'How Long Will It Last?!', url: '01quiz/quiz.html' },
+    { title: 'Guiding Lights',          url: '02lights/02lights.html' },
+    { title: 'Search Activity',         url: '03search/search.html' },
+    { title: 'Files',                   url: '04files/files.html' },
+    { title: 'The Web',                 url: '05web/web.html' }
+  ];
+
+  var frame = document.getElementById('frame');
+  var pick  = document.getElementById('pick');
+  var wrap  = document.getElementById('wrap');
+  var msg   = document.getElementById('msg');
+  var current = -1;
+
+  DECKS.forEach(function (d, i) {
+    var o = document.createElement('option');
+    o.value = i;
+    o.textContent = i + ' · ' + d.title;
+    pick.appendChild(o);
+  });
+
+  function refocus() { try { frame.contentWindow.focus(); } catch (e) {} }
+
+  // atEnd = true loads the deck on its last slide (used when stepping backwards).
+  function load(i, atEnd) {
+    if (i < 0 || i >= DECKS.length) return;
+    current = i;
+    pick.value = i;
+    msg.textContent = '';
+    frame.src = DECKS[i].url + (atEnd ? '?f=9999#9999' : '');
+    document.title = DECKS[i].title + ' — Intro to Digital Archives';
+    try { history.replaceState(null, '', '#' + i); } catch (e) {}
+  }
+
+  // Marp marks the current slide with .bespoke-marp-active and each on-click
+  // item with data-bespoke-marp-fragment="active|inactive".
+  function slidesOf(d) { return d.querySelectorAll('svg.bespoke-marp-slide'); }
+
+  function atEnd(d) {
+    var s = slidesOf(d);
+    if (!s.length) return false;
+    var last = s[s.length - 1];
+    if (!last.classList.contains('bespoke-marp-active')) return false;
+    var f = last.querySelectorAll('[data-marpit-fragment]');
+    for (var i = 0; i < f.length; i++) {
+      if (f[i].getAttribute('data-bespoke-marp-fragment') === 'inactive') return false;
+    }
+    return true;
+  }
+
+  function atStart(d) {
+    var s = slidesOf(d);
+    if (!s.length) return false;
+    var first = s[0];
+    if (!first.classList.contains('bespoke-marp-active')) return false;
+    var f = first.querySelectorAll('[data-marpit-fragment]');
+    for (var i = 0; i < f.length; i++) {
+      if (f[i].getAttribute('data-bespoke-marp-fragment') === 'active') return false;
+    }
+    return true;
+  }
+
+  function toggleFs() {
+    var d = document;
+    if (d.fullscreenElement || d.webkitFullscreenElement) {
+      (d.exitFullscreen || d.webkitExitFullscreen).call(d);
+    } else {
+      (wrap.requestFullscreen || wrap.webkitRequestFullscreen).call(wrap);
+    }
+  }
+
+  var FORWARD = { ArrowRight: 1, ArrowDown: 1, PageDown: 1 };
+  var BACK    = { ArrowLeft: 1, ArrowUp: 1, PageUp: 1 };
+
+  // Runs in the capture phase on the deck's window, so it sees keys before
+  // Marp does. Marp still handles everything except the moment a deck ends.
+  function onKey(e) {
+    var d = frame.contentDocument;
+    if (!d || e.altKey || e.ctrlKey || e.metaKey) return;
+
+    if (e.key === 'f' || e.key === 'F' || e.key === 'F11') {
+      e.preventDefault(); e.stopImmediatePropagation(); toggleFs(); return;
+    }
+
+    var fwd  = FORWARD[e.key] || (e.key === ' ' && !e.shiftKey);
+    var back = BACK[e.key]    || (e.key === ' ' && e.shiftKey);
+
+    if (fwd && atEnd(d)) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      if (e.repeat) return;               // holding a key shouldn't skip decks
+      if (current < DECKS.length - 1) load(current + 1);
+      else msg.textContent = 'End of lecture';
+    } else if (back && atStart(d)) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      if (e.repeat) return;
+      if (current > 0) load(current - 1, true);
+    }
+  }
+
+  frame.addEventListener('load', function () {
+    try {
+      frame.contentWindow.addEventListener('keydown', onKey, true);
+      refocus();
+    } catch (err) {
+      msg.textContent = 'Open this page over http(s), not as a local file.';
+    }
+  });
+
+  // Keys pressed while the toolbar has focus.
+  document.addEventListener('keydown', function (e) {
+    if (e.target === pick) return;
+    if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault(); toggleFs(); refocus();
+    }
+  });
+
+  pick.addEventListener('change', function () { load(parseInt(pick.value, 10)); pick.blur(); });
+  document.getElementById('prevDeck').addEventListener('click', function () { load(current - 1); });
+  document.getElementById('nextDeck').addEventListener('click', function () { load(current + 1); });
+  document.getElementById('fs').addEventListener('click', function () { toggleFs(); });
+  document.addEventListener('fullscreenchange', function () { setTimeout(refocus, 50); });
+  document.addEventListener('webkitfullscreenchange', function () { setTimeout(refocus, 50); });
+
+  var start = parseInt(location.hash.slice(1), 10);
+  load(isNaN(start) ? 0 : Math.max(0, Math.min(start, DECKS.length - 1)));
+})();
+</script>
+</body>
+</html>
